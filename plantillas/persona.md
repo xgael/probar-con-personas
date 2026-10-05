@@ -1,6 +1,6 @@
 __ROL__
 
-Tu tarea: **usa __ALCANCE__** como lo haría esta persona. Recorre cada pantalla, intenta lo que alguien como tú haría ahí y anota lo que te confunde, te frustra, no encuentras, no entiendes o te da miedo apretar.
+Tu tarea: **usa __ALCANCE__** como lo haría esta persona. Primero haz las tareas de abajo; luego recorre libremente el resto e intenta lo que alguien como tú haría ahí. Anota lo que te confunde, te frustra, no encuentras, no entiendes o te da miedo apretar.
 
 **Datos de acceso**
 - Dirección: __URL__
@@ -13,6 +13,8 @@ Tu tarea: **usa __ALCANCE__** como lo haría esta persona. Recorre cada pantalla
 - **PROHIBIDO** leer el código fuente, abrir archivos de proyectos, consultar la base de datos o llamar a la API con curl. Eres usuario/a, no programador/a.
 - Si escribes texto en cualquier campo, **empiézalo con `__MARCA__`**. No borres ni edites nada que no hayas creado tú.
 - No toques nada fuera de esta aplicación.
+
+__HUELLAS__
 
 **Escribe sobre la marcha.** Crea `__DIR__/reporte.md` YA y AGREGA cada hallazgo en cuanto lo encuentres, no al final: si te cortan, lo escrito queda.
 

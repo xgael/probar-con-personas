@@ -63,19 +63,44 @@ falló en cada una de ellas la primera vez.
 
 ## Paso 2 · Elegir las personas
 
-Usa los perfiles de `plantillas/perfiles.md` o los que pida el usuario. Que
-difieran en **cómo fallan**, no sólo en la edad: vista y pulso, prisa e
-impaciencia, miedo a romper, vocabulario. Tres a cuatro bastan; cada una cuesta
-de 30 a 60 minutos.
+Por omisión, **cinco** (`plantillas/perfiles.md`): tres de **opinión** que
+difieren en *cómo fallan* (vista y pulso, prisa, miedo a romper, vocabulario) y
+dos de **huellas** que sólo hacen las tareas, para que los patrones salgan de
+cinco caminos y no de tres. Una de las de huellas va con cuenta de empleado
+común. Si el usuario pide otras, respeta sus perfiles y conserva las dos de
+huellas. Cada persona cuesta de 30 a 60 minutos.
+
+## Paso 2b · Tareas y mapa real (los senderos de deseo)
+
+La idea viene del Oval de Ohio State: el plan geométrico de 1914 no se terminó
+y los estudiantes abrieron sus propios senderos, que con los años se
+pavimentaron. Aquí se mide eso en una hora: **dónde busca la gente primero**.
+
+Escribe `<dir-base>/tareas.json` con 3 a 5 tareas comunes a todas las personas:
+
+```json
+{"tareas": [
+  {"id": "vacaciones", "tarea": "Pide unos días de vacaciones",
+   "real": ["/rh/vacaciones"], "clasificacion": ""}
+]}
+```
+
+- `tarea` va en palabras de quien usa la app, **nunca** con el nombre de la
+  pantalla («ve a Mi espacio» ya le da el camino).
+- `real` es el mapa: dónde vive de verdad la función (una o varias rutas). Lo
+  sabes tú; a las personas sólo se les da `tarea` e `id`.
+- `clasificacion` se llena en el paso 4.
 
 ## Paso 3 · Lanzar
 
 Por persona, una carpeta con su `rol.md` y un `prompt.txt` armado desde
-`plantillas/persona.md` (sustituye los `__MARCADORES__`; verifica con
-`grep -c __ prompt.txt` que quede en 0). Luego:
+`plantillas/persona.md` (opinión) o `plantillas/persona-huellas.md` (huellas).
+`__HUELLAS__` se sustituye por `plantillas/huellas.md`, y dentro de él
+`__TAREAS__` (lista numerada sólo con el campo `tarea`) y `__IDS__`. Verifica
+con `grep -c __ prompt.txt` que quede en 0. Luego:
 
 ```bash
-bash ~/.claude/skills/probar-con-personas/bin/lanzar.sh /tmp/personas-<app> valeria rogelio lupita
+bash ~/.claude/skills/probar-con-personas/bin/lanzar.sh /tmp/personas-<app> valeria rogelio lupita directo costumbre
 ```
 
 Cada persona corre aparte y, al terminar, `pc-avisar` manda su `reporte.md` por
@@ -93,6 +118,14 @@ Cada hallazgo grave se comprueba **en la app o en la base**, no se copia:
   demo, la propia marca `[prueba-…]` en un avatar.
 - ¿Lo vieron varias? Lo que coincide entre personas que no hablaron entre sí es
   la señal más fuerte para priorizar.
+- **Clasifica cada sendero de deseo** (2 o más personas buscando primero en el
+  mismo lugar equivocado; `armar.py` los marca solo) y escríbelo en
+  `clasificacion` de `tareas.json`. No todo atajo se pavimenta:
+  - `pavimentar`: llevar o duplicar la función donde la buscan.
+  - `con barandilla`: pavimentar, pero con confirmación o deshacer, porque el
+    atajo puede hacer daño (un aviso a cientos de personas en un clic).
+  - `no pavimentar`: el atajo se salta algo necesario; se explica en la
+    pantalla en vez de abrirlo.
 
 ## Paso 5 · Entregar
 
@@ -103,6 +136,11 @@ python3 ~/.claude/skills/probar-con-personas/bin/armar.py /tmp/personas-<app> <s
 ```
 
 Lee `sesion.json` (título, personas, cuentas) y los `reporte.md` de cada carpeta.
+Si hay `tareas.json`, cruza el `huellas.jsonl` de cada persona y arma la sección
+**Senderos de deseo**: por tarea, cuántas acertaron al primer clic, cuántas lo
+lograron, qué lugar equivocado eligieron 2 o más y tu decisión; con el detalle
+por persona (qué esperaba, por qué, a dónde fue). Avisa en consola si a alguien
+le falta el archivo o tiene líneas ilegibles.
 Antes de correrlo escribe tú, en la misma carpeta:
 
 - `sintesis.html`: la tabla de lo que se repite entre personas (problema,
@@ -129,6 +167,11 @@ contra la foto del paso 1. Nada por posición ni por fecha.
 - Si el producto necesita datos que no existen, reportarán vacíos. Eso es un
   hallazgo de preparación, no de UX.
 - Escriben en la base: sólo sobre una base de desarrollo, nunca producción.
+- **Esto es la nieve, no el pasto.** Las huellas de cinco personas en una hora
+  son una foto rápida de por dónde *empezaría* la gente. El pasto gastado se
+  mide en producción con usuarios reales: búsquedas sin resultado, clics
+  repetidos en botones deshabilitados, idas y vueltas entre pantallas. Conviene
+  recomendar instrumentarlo; queda fuera de esta skill.
 
 ## Requisitos
 

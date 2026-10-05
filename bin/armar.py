@@ -11,8 +11,12 @@ Uso: armar.py <dir-base> <salida.html>
 <dir-base>/sintesis.html          — opcional: <tr> de la tabla «lo que se repite», 4 celdas:
                                     problema · principio (enlace) · dónde · quién lo vio
 <dir-base>/verificacion.html      — opcional: notas <div class="nota mal|ojo|ver">
+<dir-base>/tareas.json            — opcional: {"tareas": [{"id", "tarea", "real": [rutas],
+                                    "clasificacion": "pavimentar|con barandilla|no pavimentar"}]}
+<dir-base>/<dir>/huellas.jsonl    — una línea JSON por tarea (ver plantillas/huellas.md)
 """
 import base64, html, io, json, os, re, sys
+from urllib.parse import urlparse
 from PIL import Image
 
 if len(sys.argv) != 3:
@@ -138,6 +142,88 @@ for p in sesion['personas']:
                 f'<span class="tc">{n} hallazgos</span></button>')
     secciones.append(f'<section id="{e["dir"]}" class="persona" hidden>{md(t, p["dir"])}</section>')
 
+def lugar(u):
+    """Dónde cayó un clic: la ruta de la URL, sin dominio ni query."""
+    u = (u or '').strip()
+    if not u:
+        return ''
+    p = urlparse(u)
+    return (p.path or '/').rstrip('/') or '/' if (p.scheme or u.startswith('/')) else u.lower()
+
+
+def es_correcto(primer, reales):
+    pl = lugar(primer)
+    return bool(pl) and any(pl == lugar(r) or pl.startswith(lugar(r) + '/') for r in reales)
+
+
+def senderos():
+    """Tabla de senderos de deseo a partir de tareas.json + <dir>/huellas.jsonl."""
+    p = os.path.join(BASE, 'tareas.json')
+    if not os.path.isfile(p):
+        return '', []
+    tareas = json.load(open(p, encoding='utf-8'))['tareas']
+    nombres = {x['dir']: x['nombre'] for x in sesion['personas']}
+    huellas, avisos = {}, []
+    for d in nombres:
+        f = os.path.join(BASE, d, 'huellas.jsonl')
+        if not os.path.isfile(f):
+            avisos.append(f'{nombres[d]} no dejó huellas.jsonl')
+            continue
+        for n, ln in enumerate(open(f, encoding='utf-8'), 1):
+            if not ln.strip():
+                continue
+            try:
+                h = json.loads(ln)
+                huellas.setdefault(h['tarea'], []).append((d, h))
+            except (ValueError, KeyError):
+                avisos.append(f'{nombres[d]}: línea {n} de huellas.jsonl ilegible, se omitió')
+    resumen, detalle = [], []
+    for t in tareas:
+        hs = huellas.get(t['id'], [])
+        reales = t['real'] if isinstance(t['real'], list) else [t['real']]
+        acierto = sum(es_correcto(h.get('primer_clic'), reales) for _, h in hs)
+        logrado = sum(str(h.get('resultado', '')).startswith('logrado') for _, h in hs)
+        errados = {}
+        for d, h in hs:
+            if not es_correcto(h.get('primer_clic'), reales) and lugar(h.get('primer_clic')):
+                errados.setdefault(lugar(h.get('primer_clic')), []).append(nombres[d])
+        # Sendero de deseo = el mismo lugar equivocado elegido por 2 o más personas.
+        sendas = sorted(((l, q) for l, q in errados.items() if len(q) >= 2), key=lambda x: -len(x[1]))
+        clas = html.escape(t.get('clasificacion', '') or 'sin clasificar')
+        senda_txt = '<br>'.join(f'<code>{html.escape(l)}</code> · {len(q)} de {len(hs)} ({html.escape(", ".join(q))})'
+                                for l, q in sendas) or '—'
+        resumen.append(f'<tr><td>{html.escape(t["tarea"])}</td><td><code>{html.escape(", ".join(reales))}</code></td>'
+                       f'<td class="num">{acierto} de {len(hs)}</td><td class="num">{logrado} de {len(hs)}</td>'
+                       f'<td>{senda_txt}</td><td>{clas if sendas else "—"}</td></tr>')
+        filas = []
+        for d, h in hs:
+            ok = es_correcto(h.get('primer_clic'), reales)
+            cap = ''
+            if h.get('captura'):
+                i = img_id(d, os.path.basename(h['captura']))
+                cap = (f'<button class="cap" data-i="{i}" type="button">📷</button>' if i else '')
+            filas.append(f'<tr><td>{html.escape(nombres[d])}</td><td>{html.escape(str(h.get("espera", "")))}'
+                         f'<br><span class="quien">{html.escape(str(h.get("porque", "")))}</span></td>'
+                         f'<td><code>{html.escape(lugar(h.get("primer_clic")) or "—")}</code> {cap}</td>'
+                         f'<td>{"✔ a la primera" if ok else "✘ en otro lugar"}</td>'
+                         f'<td>{html.escape(str(h.get("resultado", "")))} · {html.escape(str(h.get("pasos", "?")))} clics</td></tr>')
+        detalle.append(f'<details><summary><strong>{html.escape(t["tarea"])}</strong> — {acierto} de {len(hs)} '
+                       f'a la primera</summary><table><thead><tr><th>Persona</th><th>Dónde lo esperaba y por qué</th>'
+                       f'<th>Primer clic</th><th>¿Era ahí?</th><th>Resultado</th></tr></thead>'
+                       f'<tbody>{"".join(filas)}</tbody></table></details>')
+    bloque = ('<h2 class="bloque">Senderos de deseo</h2>'
+              '<p class="sub">Dónde buscó cada persona <em>primero</em> cada tarea, contra dónde vive de verdad. '
+              'Cuando dos o más buscan en el mismo lugar equivocado, ahí está el camino que la gente quiere: '
+              'se pavimenta, se pavimenta con barandilla (confirmar, deshacer) o se explica por qué no.</p>'
+              '<table><thead><tr><th>Tarea</th><th>Dónde vive</th><th class="num">A la primera</th>'
+              '<th class="num">Lo lograron</th><th>Sendero de deseo</th><th>Decisión</th></tr></thead>'
+              f'<tbody>{"".join(resumen)}</tbody></table>' + ''.join(detalle))
+    return bloque, avisos
+
+
+bloque_senderos, avisos_huellas = senderos()
+for a in avisos_huellas:
+    print('AVISO:', a)
 sintesis, verif = leer('sintesis.html'), leer('verificacion.html')
 bloque_sintesis = ('<h2 class="bloque">Lo que se repite entre personas</h2>'
                    '<p class="sub">Mi lectura de los reportes: junta lo que vio más de una. '
@@ -155,7 +241,7 @@ rep = {
     '{{TOTAL}}': str(total),
     '{{CAPTURAS}}': str(len(imgs)),
     '{{CUENTAS}}': ''.join(filas),
-    '{{SINTESIS}}': bloque_sintesis,
+    '{{SINTESIS}}': bloque_senderos + bloque_sintesis,
     '{{VERIFICACION}}': bloque_verif,
     '{{TABS}}': ''.join(tabs),
     '{{SECCIONES}}': '\n'.join(secciones),
