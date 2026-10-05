@@ -11,7 +11,7 @@ Uso: armar.py <dir-base> <salida.html>
 <dir-base>/sintesis.html          — opcional: <tr> de la tabla «lo que se repite», 4 celdas:
                                     problema · principio (enlace) · dónde · quién lo vio
 <dir-base>/verificacion.html      — opcional: notas <div class="nota mal|ojo|ver">
-<dir-base>/tareas.json            — opcional: {"tareas": [{"id", "tarea", "real": [rutas],
+<dir-base>/tareas.json            — opcional: {"tareas": [{"id", "tarea", "real": [rutas], "rol" (opcional),
                                     "clasificacion": "pavimentar|con barandilla|no pavimentar"}]}
 <dir-base>/<dir>/huellas.jsonl    — una línea JSON por tarea (ver plantillas/huellas.md)
 """
@@ -178,7 +178,18 @@ def senderos():
             except (ValueError, KeyError):
                 avisos.append(f'{nombres[d]}: línea {n} de huellas.jsonl ilegible, se omitió')
     resumen, detalle = [], []
+    # Modo por roles: si las tareas traen "rol", se agrupan (orden estable de aparición).
+    if any(t.get('rol') for t in tareas):
+        orden = {}
+        for t in tareas:
+            orden.setdefault(t.get('rol') or 'Sin rol', len(orden))
+        tareas = sorted(tareas, key=lambda t: orden[t.get('rol') or 'Sin rol'])
+    rol_actual = None
     for t in tareas:
+        if t.get('rol') and t['rol'] != rol_actual:
+            rol_actual = t['rol']
+            resumen.append(f'<tr class="grupo"><th colspan="6">{html.escape(rol_actual)}</th></tr>')
+            detalle.append(f'<h3 class="grupo">{html.escape(rol_actual)}</h3>')
         hs = huellas.get(t['id'], [])
         reales = t['real'] if isinstance(t['real'], list) else [t['real']]
         acierto = sum(es_correcto(h.get('primer_clic'), reales) for _, h in hs)

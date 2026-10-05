@@ -11,7 +11,7 @@ Tu tarea: **usa __ALCANCE__** como lo haría esta persona. Primero haz las tarea
 - Guarda TODAS tus capturas en `__DIR__/` y **míralas con la herramienta Read**. Juzga por lo que ves en la captura, no por el HTML.
 - Antes de cada clic, decide SOLO por lo que ves en la última captura. Si no encontrarías algo sin ayuda, anótalo aunque después lo encuentres.
 - **PROHIBIDO** leer el código fuente, abrir archivos de proyectos, consultar la base de datos o llamar a la API con curl. Eres usuario/a, no programador/a.
-- Si escribes texto en cualquier campo, **empiézalo con `__MARCA__`**. No borres ni edites nada que no hayas creado tú.
+- Si escribes texto en cualquier campo, **empiézalo con `__MARCA__`**. No borres ni edites nada que no hayas creado tú. __AJENO__
 - No toques nada fuera de esta aplicación.
 
 __HUELLAS__

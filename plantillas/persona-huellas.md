@@ -10,7 +10,7 @@ Tu única tarea es **cumplir los encargos de abajo como lo haría esta persona**
 - Usa SOLO un navegador real con Playwright en Python: `__PYTHON__`, con `chromium.launch(args=["--lang=__LOCALE__"])` y tu propio `browser.new_context(locale="__LOCALE__", timezone_id="__ZONA__")`: sin `--lang`, los campos de fecha salen en mes/día de Estados Unidos aunque el contexto diga otro idioma. __VISTAS__
 - Guarda TODAS tus capturas en `__DIR__/` y **míralas con la herramienta Read**. Decide cada clic SOLO por lo que ves en la última captura.
 - **PROHIBIDO** leer el código fuente, abrir archivos de proyectos, consultar la base de datos o llamar a la API con curl.
-- Si escribes texto en cualquier campo, **empiézalo con `__MARCA__`**. No borres ni edites nada que no hayas creado tú.
+- Si escribes texto en cualquier campo, **empiézalo con `__MARCA__`**. No borres ni edites nada que no hayas creado tú. __AJENO__
 
 __HUELLAS__
 

@@ -91,12 +91,44 @@ Escribe `<dir-base>/tareas.json` con 3 a 5 tareas comunes a todas las personas:
   sabes tú; a las personas sólo se les da `tarea` e `id`.
 - `clasificacion` se llena en el paso 4.
 
+## Modo por roles (opcional)
+
+Cuando la app tiene roles (empleado, jefe, administrador…), cada persona
+recibe además un **rol**, y las tareas son las de ese rol. El perfil (cómo
+falla) y el rol (qué puede hacer) son independientes: una jefa puede ser la que
+casi no usa internet. Cinco cosas que el modo normal no necesita:
+
+1. **Persona → rol → cuenta, medido.** Antes de lanzar, entra con cada cuenta
+   (o pregunta a la API de permisos) y cuenta qué pantallas ve. Una cuenta que
+   no ve la pantalla de su tarea produce un «me rendí» que no es de UX.
+2. **Tareas con `rol` en `tareas.json`** (`"rol": "Jefa de equipo"`). Cada
+   persona recibe sólo las de su rol; dos personas del mismo rol comparten
+   tareas para que sus senderos se puedan comparar. `armar.py` agrupa la tabla
+   de senderos por rol.
+3. **La cadena necesita algo esperando.** Quien aprueba sólo prueba algo si hay
+   pendientes reales de su gente: créalos en la preparación (con marca) o
+   lanza primero a quien pide. Anota en `tareas.json` qué tarea depende de cuál.
+4. **Permiso explícito sobre lo ajeno.** La regla «no toques lo que no creaste»
+   choca con tareas como aprobar o editar la ficha de otro: la persona se rinde
+   por respetarla y el hallazgo es falso. Sustituye `__AJENO__` en la plantilla
+   por la lista exacta de registros de prueba que sí puede aprobar, rechazar o
+   editar (por nombre o marca). En el modo normal, `__AJENO__` va vacío.
+5. **Verificación cruzada.** Además de cada hallazgo, busca los casos que
+   **ningún** rol puede resolver: una solicitud que «resuelve RH» cuando la
+   única persona de RH es quien la pidió; un aviso que llega a quien no puede
+   actuar. Eso no lo ve ninguna persona sola: sale de cruzar los roles.
+
+No confundir con una auditoría de permisos (quién puede ver o hacer qué, y si
+un candado se puede saltar): eso es seguridad, se prueba como atacante y no es
+lo que mide esta skill.
+
 ## Paso 3 · Lanzar
 
 Por persona, una carpeta con su `rol.md` y un `prompt.txt` armado desde
 `plantillas/persona.md` (opinión) o `plantillas/persona-huellas.md` (huellas).
 `__HUELLAS__` se sustituye por `plantillas/huellas.md`, y dentro de él
-`__TAREAS__` (lista numerada sólo con el campo `tarea`) y `__IDS__`. Verifica
+`__TAREAS__` (lista numerada sólo con el campo `tarea`) y `__IDS__`.
+`__AJENO__` va vacío, salvo en modo por roles (ver arriba). Verifica
 con `grep -c __ prompt.txt` que quede en 0. Luego:
 
 ```bash
