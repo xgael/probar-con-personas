@@ -86,7 +86,9 @@ def etiquetar(texto, d):
             hid = f'{d}-{m.group(2)}'
             lista.append((hid, re.sub(r'[*`]', '', m.group(3)).strip()))
             return f'{m.group(1)}{m.group(2)}. ⟦H:{hid}⟧ {m.group(3)}'
-        s2 = re.sub(r'^(### )(\d+)\.\s+(.*)$', poner, s, flags=re.M)
+        # «### 3. …» o «### H3 · …»: una persona numeró con H y punto medio y
+        # sus 17 hallazgos no entraron a la página (Template, 2026-10-06).
+        s2 = re.sub(r'^(### )H?(\d+)\s*[.·:—-]\s+(.*)$', poner, s, flags=re.M)
         if s2 == s:
             s2 = re.sub(r'^()(\d+)\.\s+(.*)$', poner, s, flags=re.M)
         partes[i] = s2
@@ -165,7 +167,7 @@ def contar(texto):
     """Hallazgos = ítems numerados (o ### N.) dentro de la sección «Hallazgos»."""
     for s in re.split(r'\n## ', texto):
         if s.lower().startswith('hallazgos'):
-            return (len(re.findall(r'^### \d+\.', s, re.M))
+            return (len(re.findall(r'^### H?\d+\s*[.·:—-]', s, re.M))
                     or len(re.findall(r'^\d+\.\s', s, re.M)))
     return 0
 

@@ -46,7 +46,8 @@ def ids_validos():
             continue
         for s in re.split(r'\n## ', open(f, encoding='utf-8').read()):
             if s.lower().startswith('hallazgos'):
-                nums = re.findall(r'^### (\d+)\.', s, re.M) or re.findall(r'^(\d+)\.\s', s, re.M)
+                # Mismo patrón que armar.py: «### 3. …» o «### H3 · …».
+                nums = re.findall(r'^### H?(\d+)\s*[.·:—-]', s, re.M) or re.findall(r'^(\d+)\.\s', s, re.M)
                 v += [f'{p["dir"]}-{n}' for n in nums]
     return v
 
