@@ -216,6 +216,10 @@ python3 ~/.claude/skills/probar-con-personas/bin/marcar.py <dir-base> --lista
 - Al entregar a quien va a arreglar, pásale la ruta de `pendientes.md`.
 - Una palomita no sustituye a la siguiente vuelta: lo resuelto se confirma
   volviendo a lanzar a las personas.
+- **Hallazgos visuales** («se corta», «no veo la columna», «está encima», «letra
+  chica»): antes de arreglarlos, reprodúcelos con la skill `pulir-interfaz` en el
+  tamaño de la persona (zoom, celular). Los vuelve número, encuentra la primitiva
+  que los causa y, al re-medir, las regresiones que el arreglo dejó en otro tamaño.
 
 ## Paso 6 · Limpiar
 
