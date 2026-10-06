@@ -194,6 +194,29 @@ Los reportes van **completos y en su voz**: tu lectura va aparte, rotulada como
 tuya. Abre la página en un navegador y mide: pestañas, visor de capturas, Esc,
 consola sin errores y sin scroll horizontal en 390 px.
 
+## Paso 5b · Seguimiento: palomitas de lo que se va arreglando
+
+Cada hallazgo sale en la página con una **casilla y un id estable**
+(`<persona>-<n>`, p. ej. `valeria-3`), y `armar.py` deja junto a los reportes
+`pendientes.md`: la lista de ids con el comando para marcarlos. Quien arregla
+(una persona o un agente) marca así, y la página se regenera sola si
+`sesion.json` trae `"salida"` (ruta del HTML); con `"repo"` (URL de GitHub), la
+palomita enlaza al commit:
+
+```bash
+python3 ~/.claude/skills/probar-con-personas/bin/marcar.py <dir-base> valeria-3 en_curso --por "quién"
+python3 ~/.claude/skills/probar-con-personas/bin/marcar.py <dir-base> valeria-3 resuelto --commit <sha> --por "quién"
+python3 ~/.claude/skills/probar-con-personas/bin/marcar.py <dir-base> directo-5 descartado --nota "no es de la plataforma: …"
+python3 ~/.claude/skills/probar-con-personas/bin/marcar.py <dir-base> --lista
+```
+
+- **«resuelto» exige el commit**: la palomita verde enlaza al cambio, no es una
+  promesa. **«descartado» exige la nota** con el porqué.
+- Varios agentes pueden marcar a la vez: `marcar.py` escribe con candado.
+- Al entregar a quien va a arreglar, pásale la ruta de `pendientes.md`.
+- Una palomita no sustituye a la siguiente vuelta: lo resuelto se confirma
+  volviendo a lanzar a las personas.
+
 ## Paso 6 · Limpiar
 
 Borra sólo lo que lleve la marca de cada persona, en la base local, comparando

@@ -24,7 +24,8 @@ equivocado que eligieron dos o más, que es donde la gente espera encontrarla.
 | `plantillas/huellas.md` | Protocolo de tareas: dónde busca primero y `huellas.jsonl` |
 | `plantillas/principios.md` | Del síntoma que reportan al principio de NN/g que lo explica |
 | `bin/lanzar.sh` | Lanza cada persona como sesión `claude -p` desacoplada |
-| `bin/armar.py` | Una sola página HTML con los reportes y las capturas embebidas |
+| `bin/armar.py` | Una sola página HTML con los reportes y las capturas embebidas, con una casilla por hallazgo |
+| `bin/marcar.py` | Marca un hallazgo como en curso, resuelto (con su commit) o descartado, y regenera la página |
 
 ## Instalación
 

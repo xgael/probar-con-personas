@@ -45,8 +45,57 @@ def img_id(d, nombre):
     return imgs[k][0]
 
 
+ESTADO = {}
+_ep = os.path.join(BASE, 'estado.json')
+if os.path.isfile(_ep):
+    ESTADO = json.load(open(_ep, encoding='utf-8'))
+REPO = (sesion.get('repo') or '').rstrip('/')
+ICONO = {'resuelto': '✓', 'en_curso': '…', 'descartado': '–', 'pendiente': ''}
+ROTULO = {'resuelto': 'Resuelto', 'en_curso': 'En curso', 'descartado': 'Descartado', 'pendiente': 'Pendiente'}
+
+
+def casilla(hid):
+    """Casilla de seguimiento de un hallazgo: la marcan los agentes que lo arreglan (bin/marcar.py)."""
+    e = ESTADO.get(hid, {})
+    est = e.get('estado', 'pendiente')
+    detalle = [ROTULO[est]]
+    if e.get('por'):
+        detalle.append(f'por {e["por"]}')
+    if e.get('commit'):
+        detalle.append(f'commit {e["commit"][:7]}')
+    if e.get('nota'):
+        detalle.append(e['nota'])
+    if e.get('fecha'):
+        detalle.append(e['fecha'])
+    titulo = html.escape(' · '.join(detalle), quote=True)
+    chk = f'<span class="chk {est}" role="img" aria-label="{titulo}" title="{titulo}">{ICONO[est]}</span>'
+    ref = f'<code class="hid">{html.escape(hid)}</code>'
+    if e.get('commit') and REPO:
+        ref = f'<a class="hid" href="{REPO}/commit/{html.escape(e["commit"])}">{html.escape(hid)} · {html.escape(e["commit"][:7])}</a>'
+    return chk + ref + ' '
+
+
+def etiquetar(texto, d):
+    """Pone un id estable (<dir>-<n>) a cada hallazgo numerado de la sección «Hallazgos»."""
+    partes = re.split(r'(\n## )', texto)
+    lista = []
+    for i, s in enumerate(partes):
+        if not s.lower().startswith('hallazgos'):
+            continue
+        def poner(m):
+            hid = f'{d}-{m.group(2)}'
+            lista.append((hid, re.sub(r'[*`]', '', m.group(3)).strip()))
+            return f'{m.group(1)}{m.group(2)}. ⟦H:{hid}⟧ {m.group(3)}'
+        s2 = re.sub(r'^(### )(\d+)\.\s+(.*)$', poner, s, flags=re.M)
+        if s2 == s:
+            s2 = re.sub(r'^()(\d+)\.\s+(.*)$', poner, s, flags=re.M)
+        partes[i] = s2
+    return ''.join(partes), lista
+
+
 def inline(t, d):
     t = html.escape(t, quote=False)
+    t = re.sub(r'⟦H:([\w-]+)⟧ ?', lambda m: casilla(m.group(1)), t)
 
     def capt(m):
         nombre = os.path.basename(m.group(0))
@@ -126,13 +175,15 @@ def leer(nombre):
     return open(p, encoding='utf-8').read() if os.path.isfile(p) else ''
 
 
-filas, tabs, secciones, total = [], [], [], 0
+filas, tabs, secciones, total, todos = [], [], [], 0, []
 for p in sesion['personas']:
     rep = os.path.join(BASE, p['dir'], 'reporte.md')
     if not os.path.isfile(rep):
         sys.exit(f'Falta {rep}')
     t = open(rep, encoding='utf-8').read()
     n = contar(t)
+    t, ids = etiquetar(t, p['dir'])
+    todos += [(hid, p['nombre'], tit) for hid, tit in ids]
     total += n
     e = {k: html.escape(str(p.get(k, ''))) for k in ('dir', 'nombre', 'perfil', 'cuenta', 'modo')}
     filas.append(f'<tr><td>{e["nombre"]}</td><td>{e["perfil"]}</td><td><code>{e["cuenta"]}</code></td>'
@@ -232,6 +283,39 @@ def senderos():
     return bloque, avisos
 
 
+def seguimiento():
+    """Avance de los arreglos + pendientes.md (la lista que leen los agentes que arreglan)."""
+    if not todos:
+        return ''
+    cuenta = {k: 0 for k in ROTULO}
+    for hid, _, _ in todos:
+        cuenta[ESTADO.get(hid, {}).get('estado', 'pendiente')] += 1
+    hechos = cuenta['resuelto'] + cuenta['descartado']
+    pct = round(100 * hechos / len(todos))
+    lineas = ['# Pendientes de la prueba con personas', '',
+              'Al resolver uno, márcalo (la página se vuelve a generar sola):', '',
+              '```bash',
+              f'python3 {AQUI}/marcar.py {os.path.abspath(BASE)} <id> resuelto --commit <sha> --por "<quién>"',
+              f'python3 {AQUI}/marcar.py {os.path.abspath(BASE)} <id> en_curso --por "<quién>"',
+              f'python3 {AQUI}/marcar.py {os.path.abspath(BASE)} <id> descartado --nota "<por qué no es de la plataforma>"',
+              '```', '', '| id | estado | persona | hallazgo |', '|---|---|---|---|']
+    for hid, quien, tit in todos:
+        lineas.append(f'| `{hid}` | {ROTULO[ESTADO.get(hid, {}).get("estado", "pendiente")]} | {quien} | {tit[:110]} |')
+    open(os.path.join(BASE, 'pendientes.md'), 'w', encoding='utf-8').write('\n'.join(lineas) + '\n')
+    return ('<h2 class="bloque">Seguimiento de los arreglos</h2>'
+            f'<p class="sub">Cada hallazgo tiene una casilla. Los agentes que lo arreglan la marcan con su commit; '
+            f'las palomitas verdes enlazan al cambio. Lista para ellos: <code>{html.escape(os.path.abspath(BASE))}/pendientes.md</code>.</p>'
+            f'<div class="avance" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{pct}" '
+            f'aria-label="Avance de los arreglos"><span style="width:{pct}%"></span></div>'
+            f'<div class="cifras">'
+            f'<div class="cifra"><b>{cuenta["resuelto"]}</b><span><span class="chk resuelto">✓</span> resueltos</span></div>'
+            f'<div class="cifra"><b>{cuenta["en_curso"]}</b><span><span class="chk en_curso">…</span> en curso</span></div>'
+            f'<div class="cifra"><b>{cuenta["pendiente"]}</b><span><span class="chk pendiente"></span> pendientes</span></div>'
+            f'<div class="cifra"><b>{cuenta["descartado"]}</b><span><span class="chk descartado">–</span> descartados</span></div>'
+            f'</div>')
+
+
+bloque_seguimiento = seguimiento()
 bloque_senderos, avisos_huellas = senderos()
 for a in avisos_huellas:
     print('AVISO:', a)
@@ -252,7 +336,7 @@ rep = {
     '{{TOTAL}}': str(total),
     '{{CAPTURAS}}': str(len(imgs)),
     '{{CUENTAS}}': ''.join(filas),
-    '{{SINTESIS}}': bloque_senderos + bloque_sintesis,
+    '{{SINTESIS}}': bloque_seguimiento + bloque_senderos + bloque_sintesis,
     '{{VERIFICACION}}': bloque_verif,
     '{{TABS}}': ''.join(tabs),
     '{{SECCIONES}}': '\n'.join(secciones),
