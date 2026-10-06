@@ -11,7 +11,9 @@ description: >
 
   Úsala cuando pidan "pon a 3 personas a usar la plataforma", "que la prueben
   usuarios sin contexto", "manda agentes con distintas edades a revisar X",
-  "prueba de usabilidad con personas", "que alguien que no sabe nada la use".
+  "prueba de usabilidad con personas", "que alguien que no sabe nada la use",
+  "pruébalo por roles", "como jefe y como empleado", "con distintos permisos",
+  "prueba el flujo de aprobación".
 
   NO es una auditoría heurística (para eso está ux-audit) ni un test automatizado:
   encuentra dónde se rompe el camino de alguien que no conoce la app, no mide
@@ -55,6 +57,10 @@ falló en cada una de ellas la primera vez.
 - **Una cuenta por persona**, para que no se pisen. Mide qué ve cada cuenta (por
   la API de permisos o entrando), no lo supongas: en la corrida original las tres cuentas de
   RH veían las 10 pantallas y las de empleado sólo 5.
+- **Esa medición decide el modo.** Si las cuentas disponibles ven pantallas
+  distintas (permisos distintos), se usa el **modo por roles** por omisión, aunque
+  nadie lo haya pedido. Si todas ven lo mismo, el modo normal. Anota en la
+  entrega cuál se usó y la medición que lo decidió.
 - **Datos listos** para el flujo principal de la persona común.
 - **Marca por persona** (`[prueba-<nombre>]`) para todo lo que escriban. Es lo
   único que permite limpiar después sin tocar datos ajenos.
@@ -91,9 +97,11 @@ Escribe `<dir-base>/tareas.json` con 3 a 5 tareas comunes a todas las personas:
   sabes tú; a las personas sólo se les da `tarea` e `id`.
 - `clasificacion` se llena en el paso 4.
 
-## Modo por roles (opcional)
+## Modo por roles (se enciende solo)
 
-Cuando la app tiene roles (empleado, jefe, administrador…), cada persona
+Se activa cuando la medición del paso 1 encuentra cuentas con permisos
+distintos, o cuando lo piden. Cuando la app tiene roles (empleado, jefe,
+administrador…), cada persona
 recibe además un **rol**, y las tareas son las de ese rol. El perfil (cómo
 falla) y el rol (qué puede hacer) son independientes: una jefa puede ser la que
 casi no usa internet. Cinco cosas que el modo normal no necesita:
