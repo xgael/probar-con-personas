@@ -17,7 +17,9 @@ equivocado que eligieron dos o más, que es donde la gente espera encontrarla.
 
 | Archivo | Para qué |
 |---|---|
-| `SKILL.md` | El método: preparar, elegir personas, lanzar, verificar, entregar, limpiar |
+| `SKILL.md` | El método: preparar, elegir personas, lanzar, verificar, entregar, limpiar, arreglar por tandas y segunda ronda |
+| `plantillas/persona-tramposa.md` | La persona que intenta burlar el sistema (modo adversario) |
+| `bin/vigilar.sh` | Espera a que terminen y avisa si la app se cae |
 | `plantillas/perfiles.md` | Perfiles probados y cómo falla cada uno |
 | `plantillas/persona.md` | Instrucciones de una persona de opinión (tareas + recorrido libre) |
 | `plantillas/persona-huellas.md` | Instrucciones de una persona de huellas (sólo tareas) |

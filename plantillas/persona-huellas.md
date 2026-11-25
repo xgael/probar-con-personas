@@ -11,6 +11,7 @@ Tu única tarea es **cumplir los encargos de abajo como lo haría esta persona**
 - Guarda TODAS tus capturas en `__DIR__/` y **míralas con la herramienta Read**. Decide cada clic SOLO por lo que ves en la última captura.
 - **PROHIBIDO** leer el código fuente, abrir archivos de proyectos, consultar la base de datos o llamar a la API con curl.
 - Si escribes texto en cualquier campo, **empiézalo con `__MARCA__`**. No borres ni edites nada que no hayas creado tú. __AJENO__
+- __SESION__
 
 __HUELLAS__
 

@@ -9,11 +9,14 @@ description: >
   verificar cada hallazgo antes de entregarlo, armar una sola página HTML con los
   reportes y limpiar sólo lo que ellas crearon.
 
-  Úsala cuando pidan "pon a 3 personas a usar la plataforma", "que la prueben
+  También pone a una persona TRAMPOSA a intentar burlar el sistema y
+mide si los demás roles la descubren, y cierra el ciclo: plan de arreglos por tandas con una sonda que repite cada
+truco, y una segunda ronda sobre la base restaurada para confirmar. Úsala cuando pidan "pon a 3 personas a usar la plataforma", "que la prueben
   usuarios sin contexto", "manda agentes con distintas edades a revisar X",
   "prueba de usabilidad con personas", "que alguien que no sabe nada la use",
   "pruébalo por roles", "como jefe y como empleado", "con distintos permisos",
-  "prueba el flujo de aprobación".
+  "prueba el flujo de aprobación", "una persona que intente hacer trampa", "a ver si el sistema detecta a
+quien no hace lo que debe", "simula el trabajo diario del equipo", "vuelve a lanzar a las personas".
 
   NO es una auditoría heurística (para eso está ux-audit) ni un test automatizado:
   encuentra dónde se rompe el camino de alguien que no conoce la app, no mide
@@ -66,6 +69,19 @@ falló en cada una de ellas la primera vez.
   único que permite limpiar después sin tocar datos ajenos.
 - **Foto de la base** si es local: conteo por tabla del módulo, para saber
   después qué escribieron. Nunca contra producción.
+- **Respaldo completo** (`pg_dump -Fc … -f <dir-base>/antes-de-personas.dump`) cuando alguna persona puede escribir sobre
+  lo ajeno (la tramposa, quien aprueba): la limpieza por marca no alcanza, y es la base de la segunda ronda.
+- **Cuentas nuevas por el mecanismo del propio proyecto** (su script de usuarios de prueba, no `INSERT` a mano): un rol
+  que falta (quien captura, la tramposa) se crea con el mismo servicio que hashea contraseñas y asigna roles.
+- **Python con Playwright, aparte del proyecto**: `python3 -m venv ~/.venvs/personas && ~/.venvs/personas/bin/pip install
+  playwright pillow && ~/.venvs/personas/bin/python -m playwright install chromium` (va en `__PYTHON__`).
+- **Prueba de humo** antes de lanzar: entrar con una cuenta en escritorio y en celular y mirar la captura. En celular la
+  entrada puede pedir un toque antes del formulario («Iniciar sesión»): dilo en el prompt o la persona de celular se atora.
+- **Datos para la cadena**: lo que cada rol debe resolver tiene que estar esperando (un descuento por aprobar, leads por
+  repartir, un lead a punto de vencer, una venta vieja de la tramposa). Si mueves fechas para simularlo («entregado hace
+  20 h»), anótalo en la verificación: las personas lo reportarán como dato raro.
+- **Una configuración vacía que apaga un flujo es un hallazgo**: si el tarifario no tiene topes, nadie pide aprobar
+  descuentos y el rol que aprueba no tiene nada que probar. Lo mínimo se siembra con marca y se dice en la entrega.
 
 ## Paso 2 · Elegir las personas
 
@@ -75,6 +91,9 @@ dos de **huellas** que sólo hacen las tareas, para que los patrones salgan de
 cinco caminos y no de tres. Una de las de huellas va con cuenta de empleado
 común. Si el usuario pide otras, respeta sus perfiles y conserva las dos de
 huellas. Cada persona cuesta de 30 a 60 minutos.
+
+Si piden saber si el sistema descubre a quien hace trampa, suma una **persona tramposa** (ver su sección) a las cinco:
+no reemplaza a ninguna, porque las demás son las que tienen que descubrirla.
 
 ## Paso 2b · Tareas y mapa real (los senderos de deseo)
 
@@ -126,6 +145,25 @@ casi no usa internet. Cinco cosas que el modo normal no necesita:
    única persona de RH es quien la pidió; un aviso que llega a quien no puede
    actuar. Eso no lo ve ninguna persona sola: sale de cruzar los roles.
 
+## Persona tramposa (modo adversario)
+
+Cuando la pregunta es «¿el sistema descubre a quien no hace lo que debe?», agrega una persona con
+`plantillas/persona-tramposa.md`: alguien de un rol común (un vendedor bajo su cuota) que intenta verse mejor de lo que es
+**desde la pantalla**: cerrar ventas que no existen, decir que llamó o mandó cuando no, fechas atrasadas, quedarse con lo
+de otros, aprobarse lo propio, mandarle basura a un compañero, borrar el rastro. `__TRUCOS__` lleva esa lista en
+palabras del oficio; sus tareas (`tareas.json`, rol «… tramposo») son los mismos trucos, para que deje huellas. Su
+reporte termina con dos tablas: **Trucos que funcionaron** (¿deja rastro?, ¿dónde lo vería el jefe?) y **Trucos que el
+sistema frenó**.
+
+- Lánzala en la primera tanda y a quien debe descubrirla (la líder, con la tarea «sospechas que alguien te maquilla los
+  números: búscalo») después.
+- **Verifica cada truco en la base con sus marcas de tiempo**: la orden «enviada» y confirmada con segundos de diferencia,
+  el contacto con `fecha` de hace semanas y `created_at` de hoy. Esas diferencias son las reglas que el sistema puede
+  vigilar solo.
+- El hallazgo no es sólo «pasó»: es **quién se enteró y dónde**. «La directora lo encontró leyendo renglón por renglón»
+  es un hallazgo tan grave como el truco.
+- No es una prueba de penetración: no usa la API, el código ni la base (eso es la revisión adversarial del proyecto).
+
 No confundir con una auditoría de permisos (quién puede ver o hacer qué, y si
 un candado se puede saltar): eso es seguridad, se prueba como atacante y no es
 lo que mide esta skill.
@@ -136,8 +174,13 @@ Por persona, una carpeta con su `rol.md` y un `prompt.txt` armado desde
 `plantillas/persona.md` (opinión) o `plantillas/persona-huellas.md` (huellas).
 `__HUELLAS__` se sustituye por `plantillas/huellas.md`, y dentro de él
 `__TAREAS__` (lista numerada sólo con el campo `tarea`) y `__IDS__`.
-`__AJENO__` va vacío, salvo en modo por roles (ver arriba). Verifica
-con `grep -c __ prompt.txt` que quede en 0. Luego:
+`__AJENO__` va vacío, salvo en modo por roles (ver arriba). `__SESION__` lleva la regla de **entrar una
+sola vez** (la pantalla de entrada suele tener límite por minuto y cinco personas lo agotan):
+
+> Entra una vez, guarda la sesión con `context.storage_state(path="__DIR__/sesion.json")` y en los scripts siguientes ábrela
+> con `browser.new_context(storage_state="__DIR__/sesion.json", ...)`. Si te saca, vuelve a entrar y guárdala otra vez.
+
+Verifica con `grep -c __ prompt.txt` que quede en 0. Luego:
 
 ```bash
 bash ~/.claude/skills/probar-con-personas/bin/lanzar.sh /tmp/personas-<app> valeria rogelio lupita directo costumbre
@@ -145,6 +188,15 @@ bash ~/.claude/skills/probar-con-personas/bin/lanzar.sh /tmp/personas-<app> vale
 
 Cada persona corre aparte y, al terminar, `pc-avisar` manda su `reporte.md` por
 el canal del bot. Si `pc-avisar` no existe, el script cae a `nohup` y avisa.
+
+- **Chequeo de vida**: con `PC_URL=<url> bash …/lanzar.sh …` no lanza si la app no contesta. Y mientras corren,
+  `bash …/bin/vigilar.sh <dir-base> <url>` en segundo plano espera a que terminen, avisa si la app se cae y deja el conteo
+  de capturas, reporte y huellas. No esperes con `sleep` encadenados.
+- **Una corrida que no pudo entrar no cuenta**: si un reporte dice «no pude entrar», levanta la app, mueve lo que dejó
+  cada persona a `<dir-base>/fallidas/<persona>/` (deja `prompt.txt` y `rol.md`) y relánzala. `lanzar.sh` no relanza a
+  quien ya tiene `reporte.md`.
+- **Tandas cuando un rol depende de lo que hace otro**: primero quienes generan (la tramposa, quien captura, quien pide) y,
+  al terminar, quien revisa o descubre (la líder). Así la líder encuentra lo que dejó la tramposa.
 
 **No predigas resultados mientras corren.** Si preguntan, di cuántas capturas y
 cuántas líneas de reporte llevan (`ls`, `wc -l`), nada más.
@@ -226,6 +278,29 @@ python3 ~/.claude/skills/probar-con-personas/bin/marcar.py <dir-base> --lista
 Borra sólo lo que lleve la marca de cada persona, en la base local, comparando
 contra la foto del paso 1. Nada por posición ni por fecha.
 
+## Paso 7 · Del hallazgo al arreglo y la segunda ronda
+
+Las personas no son el final: el ciclo que sirvió en Comercial (24-25 nov 2026, 54 y 61 hallazgos) fue:
+
+1. **Plan por tandas** (en modo plan, aprobado por el usuario): las decisiones de negocio se preguntan antes («¿qué pide
+   Rise para dar por ganada una venta?») y los arreglos se agrupan por tema, de lo grave a lo cosmético. Una tanda a la
+   vez: terminada, probada y con su commit antes de la siguiente.
+2. **Cada tanda trae una sonda que repite lo que hicieron las personas** por la API (los trucos de la tramposa, el flujo
+   de quien aprueba) y comprueba que ahora se frena o queda marcado, más las sondas viejas del módulo (un arreglo cambia
+   contratos: confirmar ahora pide un archivo y las sondas viejas también).
+3. **Pantallas** de lo tocado en escritorio, celular y zoom, recorridas con el rol de quien lo usa.
+4. **Segunda ronda** con las mismas personas, roles y tareas, sobre la base **restaurada** desde `antes-de-personas.dump`
+   (más las migraciones nuevas) y respaldando antes lo que dejó la primera. Refresca lo que caducó en la preparación (un
+   lead que debía estar a 20 h de vencer ya venció).
+5. **Compara**: en `verificacion.html`, una nota con lo que mejoró (tareas logradas, clics, quién arrancó dónde) y lo que
+   sigue; en la síntesis, lo nuevo. Una segunda ronda encuentra **lo que rompió el arreglo** (en Comercial: poner en sólo
+   lectura las líneas de quien aprueba le quitó el precio de lista) y **trucos nuevos** contra las reglas nuevas.
+6. **Entrega honesta**: lo arreglado con su medición y lo que sigue abierto, con su razón. Marca cada hallazgo con
+   `marcar.py` mientras arreglas: «¿ya parchaste todo?» se contesta con la lista, no de memoria.
+
+Para que el usuario lea todo, copia los `reporte.md` de cada ronda a su carpeta de documentos (`rondaN/<persona>.md`)
+junto a las páginas: las capturas viven en `<dir-base>` y las páginas ya las traen dentro.
+
 ## Límites honestos
 
 - Son agentes actuando un papel, no personas: a veces se les escapa el
@@ -233,6 +308,8 @@ contra la foto del paso 1. Nada por posición ni por fecha.
   dónde se rompe el camino; no miden tiempo ni frustración real.
 - Si el producto necesita datos que no existen, reportarán vacíos. Eso es un
   hallazgo de preparación, no de UX.
+- La tramposa prueba lo que un usuario astuto haría en la pantalla. Lo que el sistema no puede saber (si un archivo
+  «del cliente» es auténtico, si una llamada declarada ocurrió) no se cierra con reglas: se hace visible a quien revisa.
 - Escriben en la base: sólo sobre una base de desarrollo, nunca producción.
 - **Esto es la nieve, no el pasto.** Las huellas de cinco personas en una hora
   son una foto rápida de por dónde *empezaría* la gente. El pasto gastado se
@@ -242,5 +319,5 @@ contra la foto del paso 1. Nada por posición ni por fecha.
 
 ## Requisitos
 
-`claude` CLI, `pc-avisar` (o `nohup`), un Python con `playwright` + Chromium
-(indícalo en `__PYTHON__` de la plantilla) y `pillow` para `armar.py`.
+`claude` CLI, `pc-avisar` (o `nohup`), `curl` (chequeo de vida), un Python con `playwright` + Chromium
+(indícalo en `__PYTHON__` de la plantilla; ver Paso 1) y `pillow` para `armar.py`.

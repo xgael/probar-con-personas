@@ -8,6 +8,12 @@ BASE="${1:?Uso: lanzar.sh <dir-base> <persona> [<persona> ...]}"; shift
 [ "$#" -gt 0 ] || { echo "Falta al menos una persona" >&2; exit 2; }
 command -v claude >/dev/null || { echo "No está el CLI claude en el PATH" >&2; exit 1; }
 
+# Chequeo de vida: con PC_URL, la app tiene que contestar ANTES de lanzar (una persona que no puede entrar gasta su
+# corrida en «no pude entrar»). Mientras corren, bin/vigilar.sh la sigue vigilando.
+if [ -n "${PC_URL:-}" ] && ! curl -s -o /dev/null --max-time 10 "$PC_URL"; then
+  echo "La app no contesta en $PC_URL: levántala antes de lanzar a nadie." >&2; exit 1
+fi
+
 for p in "$@"; do
   D="$BASE/$p"
   [ -f "$D/prompt.txt" ] || { echo "Falta $D/prompt.txt" >&2; exit 1; }

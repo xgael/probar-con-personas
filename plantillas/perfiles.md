@@ -60,3 +60,13 @@ grande y arriba, buscar con una lupa. Cuando no lo encuentra, lo dice así:
 - **Vistas:** escritorio 1440x900.
 - **Abre senderos por:** convención (Ley de Jakob) y modelo mental heredado. En
   `porque` de cada huella anota en qué otra app lo vio así.
+
+## Adversaria (opcional)
+
+### La tramposa — mismo rol que la gente común, otro propósito (30–40)
+Va bajo su meta y la van a revisar esta semana. Usa sólo la pantalla para verse mejor: cerrar lo que no se cerró, declarar
+lo que no hizo, fechas atrasadas, quedarse con lo ajeno, aprobarse lo propio, mandarle basura a un compañero. Plantilla
+`persona-tramposa.md`; su reporte separa **lo que funcionó** (con su rastro) de **lo que el sistema frenó**.
+- **Vistas:** escritorio 1440x900.
+- **Encuentra:** reglas que sólo existen en la pantalla, «comprobado» que en realidad es declarado, fechas que se
+  pueden escribir, avisos que nadie recibe. Lánzala antes que a quien la tiene que descubrir.
