@@ -280,12 +280,22 @@ contra la foto del paso 1. Nada por posición ni por fecha.
 
 ## Paso 7 · Del hallazgo al arreglo y la segunda ronda
 
-Las personas no son el final: el ciclo que sirvió en Comercial (24-25 nov 2026, 54 y 61 hallazgos) fue:
+Las personas no son el final, y **arreglar no espera a que lo pidan**: en cuanto la verificación y la página están
+entregadas, se arregla en el mismo turno. Pedir permiso hallazgo por hallazgo retrasa y quita visibilidad. El ciclo que
+sirvió en Comercial (24-25 nov 2026, 54 y 61 hallazgos):
 
-1. **Plan por tandas** (en modo plan, aprobado por el usuario): las decisiones de negocio se preguntan antes («¿qué pide
-   Rise para dar por ganada una venta?») y los arreglos se agrupan por tema, de lo grave a lo cosmético. Una tanda a la
-   vez: terminada, probada y con su commit antes de la siguiente.
-2. **Cada tanda trae una sonda que repite lo que hicieron las personas** por la API (los trucos de la tramposa, el flujo
+1. **Persona por persona, en el orden de la página.** Se toma el reporte de UNA persona, se arregla todo lo suyo que es
+   de la plataforma, se mide, se hace su commit y se marca cada id con `marcar.py` (`resuelto` con el commit; `descartado`
+   con la nota si es de la prueba o del ambiente). Sólo entonces se pasa a la siguiente persona: así cada quien ve su
+   reporte cerrado y lo que se repite entre personas se arregla una vez (en la segunda se marca con el mismo commit).
+   - **Sólo se detiene** en lo que no es de quien arregla: una decisión de negocio («¿qué pide el sistema para dar por
+     ganada una venta?»), subir a un servidor o mandar algo afuera. Esas preguntas se juntan y se hacen una vez, al
+     empezar, sin frenar lo demás; lo que dependa de la respuesta queda `en_curso` con su nota.
+   - Cada hallazgo queda en un estado: resuelto (con commit), descartado (con razón) o pendiente con lo que le falta. Al
+     final, «¿ya parchaste todo?» se contesta con `marcar.py --lista`, no de memoria.
+   - Si hay varias personas con mucho trabajo, cada una puede ir en un subagente, **una tras otra** (tocan los mismos
+     archivos), con el reporte, los ids y las reglas del proyecto en su encargo.
+2. **Cada persona (o tanda) trae una sonda que repite lo que hicieron las personas** por la API (los trucos de la tramposa, el flujo
    de quien aprueba) y comprueba que ahora se frena o queda marcado, más las sondas viejas del módulo (un arreglo cambia
    contratos: confirmar ahora pide un archivo y las sondas viejas también).
 3. **Pantallas** de lo tocado en escritorio, celular y zoom, recorridas con el rol de quien lo usa.
